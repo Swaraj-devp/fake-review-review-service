@@ -28,4 +28,6 @@ public class Review {
     private int rating;
 
     private boolean fake;
+
+    private boolean verifiedPurchase;
 }

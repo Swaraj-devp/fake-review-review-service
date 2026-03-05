@@ -14,6 +14,6 @@ public class ReviewRequest {
     private Long productId;
     private String reviewText;
     private int rating;
+    private String imageUrl;
 
-    // getters and setters
 }
