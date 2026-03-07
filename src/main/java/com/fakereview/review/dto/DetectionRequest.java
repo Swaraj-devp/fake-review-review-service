@@ -5,16 +5,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Getter
-@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class ReviewRequest {
+@Getter
+@Setter
+public class DetectionRequest {
 
     private Long productId;
+    private String username;
     private String reviewText;
     private int rating;
-    private String imageUrl;
-    private String itemType;
-
 }

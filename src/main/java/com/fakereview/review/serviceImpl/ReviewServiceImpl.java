@@ -1,5 +1,9 @@
 package com.fakereview.review.serviceImpl;
 
+import com.fakereview.review.client.DetectionClient;
+import com.fakereview.review.client.PurchaseFeignClient;
+import com.fakereview.review.dto.DetectionRequest;
+import com.fakereview.review.dto.DetectionResponse;
 import com.fakereview.review.dto.ReviewRequest;
 import com.fakereview.review.model.Review;
 import com.fakereview.review.repository.ReviewRepository;
@@ -15,29 +19,40 @@ public class ReviewServiceImpl implements ReviewService {
     @Autowired
     private ReviewRepository reviewRepository;
 
+    @Autowired
+    private DetectionClient detectionClient;
+
+    @Autowired
+    private PurchaseFeignClient purchaseFeignClient;
+
     @Override
-    public Review addReview(ReviewRequest request,String username) {
-
-        // Duplicate review check
-        boolean alreadyReviewed =
-                reviewRepository.existsByProductIdAndUsername(
-                        request.getProductId(), username);
-
-        if(alreadyReviewed){
-            throw new RuntimeException("User already reviewed this product");
-        }
+    public Review addReview(ReviewRequest request, String username) {
 
         Review review = new Review();
 
         review.setProductId(request.getProductId());
-        review.setUsername(username);
         review.setReviewText(request.getReviewText());
         review.setRating(request.getRating());
+        review.setImageUrl(request.getImageUrl());
+        review.setUsername(username);
 
-        // Temporary detection
-        review.setFake(detectFakeReview(request));
+        boolean verifiedPurchase = purchaseFeignClient.verifyPurchase(
+                username,
+                request.getProductId(),
+                request.getItemType()
+        );
 
-        review.setVerifiedPurchase(false);
+        review.setVerifiedPurchase(verifiedPurchase);
+
+        DetectionRequest detectionRequest = new DetectionRequest();
+        detectionRequest.setProductId(request.getProductId());
+        detectionRequest.setUsername(username);
+        detectionRequest.setReviewText(request.getReviewText());
+        detectionRequest.setRating(request.getRating());
+
+        DetectionResponse response = detectionClient.analyzeReview(detectionRequest);
+
+        review.setFake(response.isFake());
 
         return reviewRepository.save(review);
     }
@@ -46,18 +61,4 @@ public class ReviewServiceImpl implements ReviewService {
     public List<Review> getReviews(Long productId) {
         return reviewRepository.findByProductId(productId);
     }
-
-    private boolean detectFakeReview(ReviewRequest request) {
-
-        if (request.getReviewText().length() < 10) {
-            return true;
-        }
-
-        if (request.getRating() == 5 && request.getReviewText().length() < 15) {
-            return true;
-        }
-
-        return false;
-    }
-
 }
