@@ -29,5 +29,7 @@ public class Review {
 
     private boolean fake;
 
+    private String imageUrl;
+
     private boolean verifiedPurchase;
 }
