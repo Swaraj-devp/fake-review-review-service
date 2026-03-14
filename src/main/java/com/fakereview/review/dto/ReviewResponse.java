@@ -1,23 +1,18 @@
-package com.fakereview.review.model;
+package com.fakereview.review.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity
-@Table(name="reviews")
-public class Review {
+public class ReviewResponse {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private Long productId;
@@ -30,21 +25,12 @@ public class Review {
 
     private boolean fake;
 
+    private String fakeReason;
+
     private String imageUrl;
 
     private boolean verifiedPurchase;
 
-    private String fakeReason;
-
-    private String itemType;
-
     private LocalDateTime createdAt;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 }
