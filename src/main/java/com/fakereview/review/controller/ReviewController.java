@@ -9,8 +9,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 @CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/review")
@@ -53,13 +57,14 @@ public class ReviewController {
         return reviewService.getRatingDistribution(productId);
     }
 
-    @GetMapping("/my-review")
-    public ReviewResponse getMyReview(
-            @RequestParam Long productId,
-            @RequestParam String itemType
-    ) {
+    @GetMapping("/my-reviews")
+    public ResponseEntity<?> getMyReviews(Authentication authentication) {
 
-        return reviewService.getMyReview(productId, itemType);
+        String username = authentication.getName();
+
+        List<Review> reviews = reviewService.getMyReviews(username);
+
+        return ResponseEntity.ok(reviews);
     }
 
     @PutMapping("/{reviewId}")
@@ -113,5 +118,10 @@ public class ReviewController {
             @RequestParam(defaultValue = "10") int size) {
 
         return reviewService.getTopReviews(productId, page, size);
+    }
+
+    @GetMapping("/stats")
+    public Map<String,Object> getStats(){
+        return reviewService.getStats();
     }
 }

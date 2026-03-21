@@ -20,7 +20,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,6 +81,15 @@ public class ReviewServiceImpl implements ReviewService {
         review.setFake(response.isFake());
         review.setFakeReason(response.getReason());
 
+        boolean purchased = purchaseFeignClient.verifyPurchase(
+                username,
+                request.getProductId(),
+                request.getItemType()
+        );
+
+        if(!purchased){
+            throw new RuntimeException("User has not purchased this product");
+        }
         Review saved = reviewRepository.save(review);
         log.info("Review successfully saved for product {}", request.getProductId());
         return reviewMapper.toResponse(saved);
@@ -129,23 +140,6 @@ public class ReviewServiceImpl implements ReviewService {
         return distribution;
     }
 
-    @Override
-    public ReviewResponse getMyReview(Long productId, String itemType) {
-
-        String username = SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getName();
-
-        Review review = reviewRepository
-                .findByUsernameAndProductIdAndItemType(
-                        username,
-                        productId,
-                        itemType
-                )
-                .orElseThrow(() -> new ReviewNotFoundException("Review not found"));
-        return reviewMapper.toResponse(review);
-    }
 
     @Override
     public ReviewResponse updateReview(Long reviewId, UpdateReviewRequest request, String username) {
@@ -221,5 +215,23 @@ public class ReviewServiceImpl implements ReviewService {
                 reviewRepository.findByProductIdOrderByRatingDesc(productId, pageable);
 
         return reviews.map(reviewMapper::toResponse);
+    }
+
+    public Map<String,Object> getStats(){
+
+        long total = reviewRepository.count();
+        long fake = reviewRepository.countByFakeTrue();
+        long real = total - fake;
+
+        Map<String,Object> stats = new HashMap<>();
+        stats.put("totalReviews", total);
+        stats.put("fakeReviews", fake);
+        stats.put("realReviews", real);
+
+        return stats;
+    }
+
+    public List<Review> getMyReviews(String username){
+        return reviewRepository.findByUsername(username);
     }
 }
