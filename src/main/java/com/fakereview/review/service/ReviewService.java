@@ -1,9 +1,11 @@
 package com.fakereview.review.service;
 
 import com.fakereview.review.dto.*;
+import com.fakereview.review.model.Review;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ReviewService {
 
@@ -16,8 +18,6 @@ public interface ReviewService {
     double getAverageRating(Long productId);
 
     List<RatingDistributionResponse> getRatingDistribution(Long productId);
-
-    ReviewResponse getMyReview(Long productId, String itemType);
 
     public ReviewResponse updateReview(Long reviewId, UpdateReviewRequest request, String username);
 
@@ -32,4 +32,8 @@ public interface ReviewService {
             int size);
 
     public Page<ReviewResponse> getTopReviews(Long productId, int page, int size);
+
+    Map<String, Object> getStats();
+
+    List<Review> getMyReviews(String username);
 }

@@ -26,14 +26,19 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     @Query("SELECT r.rating, COUNT(r) FROM Review r WHERE r.productId = :productId GROUP BY r.rating")
     List<Object[]> getRatingDistribution(Long productId);
 
-    Optional<Review> findByUsernameAndProductIdAndItemType(
-            String username,
-            Long productId,
-            String itemType
-    );
+//    Optional<Review> findByUsernameAndProductIdAndItemType(
+//            String username,
+//            Long productId,
+//            String itemType
+//    );
     Page<Review> findByProductId(Long productId, Pageable pageable);
 
     Page<Review> findByProductIdAndFake(Long productId, boolean fake, Pageable pageable);
 
     Page<Review> findByProductIdOrderByRatingDesc(Long productId, Pageable pageable);
+
+    long countByFakeTrue();
+
+    List<Review> findByUsername(String username);
+
 }
