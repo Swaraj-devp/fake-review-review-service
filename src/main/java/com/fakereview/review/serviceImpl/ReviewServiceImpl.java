@@ -4,6 +4,7 @@ import com.fakereview.review.client.DetectionClient;
 import com.fakereview.review.client.PurchaseFeignClient;
 import com.fakereview.review.dto.*;
 import com.fakereview.review.exception.DuplicateReviewException;
+import com.fakereview.review.exception.PurchaseNotFoundException;
 import com.fakereview.review.exception.ReviewNotFoundException;
 import com.fakereview.review.exception.UnauthorizedReviewAccessException;
 import com.fakereview.review.mapper.ReviewMapper;
@@ -15,7 +16,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -63,12 +63,17 @@ public class ReviewServiceImpl implements ReviewService {
         review.setImageUrl(request.getImageUrl());
         review.setUsername(username);
         review.setCreatedAt(LocalDateTime.now());
-        boolean verifiedPurchase = purchaseFeignClient.verifyPurchase(
+        boolean purchased = purchaseFeignClient.verifyPurchase(
                 username,
                 request.getProductId(),
                 request.getItemType()
         );
-        review.setVerifiedPurchase(verifiedPurchase);
+
+        if(!purchased){
+            throw new PurchaseNotFoundException("User has not purchased this product");
+        }
+
+        review.setVerifiedPurchase(true);
 
         DetectionRequest detectionRequest = new DetectionRequest();
         detectionRequest.setProductId(request.getProductId());
@@ -81,15 +86,7 @@ public class ReviewServiceImpl implements ReviewService {
         review.setFake(response.isFake());
         review.setFakeReason(response.getReason());
 
-        boolean purchased = purchaseFeignClient.verifyPurchase(
-                username,
-                request.getProductId(),
-                request.getItemType()
-        );
 
-        if(!purchased){
-            throw new RuntimeException("User has not purchased this product");
-        }
         Review saved = reviewRepository.save(review);
         log.info("Review successfully saved for product {}", request.getProductId());
         return reviewMapper.toResponse(saved);

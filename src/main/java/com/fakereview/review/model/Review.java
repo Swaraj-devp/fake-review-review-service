@@ -39,12 +39,4 @@ public class Review {
     private String itemType;
 
     private LocalDateTime createdAt;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 }
